@@ -1,0 +1,260 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+</script>
+<script>
+  /**
+   * The available frequency options for hourly scheduling.
+   * @const {Array<Object>}
+   */
+  var HOURLY_FREQUENCY;
+
+  /**
+   * The available frequency options for daily scheduling.
+   * @const {Array<Object>}
+   */
+  var DAILY_FREQUENCY;
+
+  /**
+   * The available frequency options for weekly scheduling.
+   * @const {Array<Object>}
+   */
+  var WEEKLY_FREQUENCY;
+
+  /**
+   * Run initializations on dialog load.
+   */
+  $(function() {
+    google.script.run
+        .withUserObject(this)
+        .withSuccessHandler(onSuccessHandler_retrieveSchedule)
+        .retrieveCurrentSchedule();
+
+    if($("#enableScheduler").is(":checked")){
+      $("#setScheduler").show();
+      google.script.host.setHeight(170);
+    }
+
+    // Assign handler functions to dialog elements here
+    $('#frequency').change(onTimerSelectionChange);
+    $('#dialog-execute-button').click(onExecuteClick);
+    $('#enableScheduler').change(onEnableScheduler);
+
+    // We don't want to have more often than 12 hour frequency as it may be
+    // overkill to fetch that frequently.
+    HOURLY_FREQUENCY = [
+        {"value": 4, "text": "Every 4 hours"},
+        {"value": 12, "text": "Every 12 hours"}
+    ];
+
+    DAILY_FREQUENCY = [
+        {"value":0,"text": "Midnight to 1am"},
+        {"value":1,"text": "1am to 2am"},
+        {"value":2,"text": "2am to 3am"},
+        {"value":3,"text": "3am to 4am"},
+        {"value":4,"text": "4am to 5am"},
+        {"value":5,"text": "5am to 6am"},
+        {"value":6,"text": "6am to 7am"},
+        {"value":7,"text": "7am to 8am"},
+        {"value":8,"text": "8am to 9am"},
+        {"value":9,"text": "9am to 10am"},
+        {"value":10,"text": "10am to 11am"},
+        {"value":11,"text": "11am to Noon"},
+        {"value":12,"text": "Noon to 1pm"},
+        {"value":13,"text": "1pm to 2pm"},
+        {"value":14,"text": "2pm to 3pm"},
+        {"value":15,"text": "3pm to 4pm"},
+        {"value":16,"text": "4pm to 5pm"},
+        {"value":17,"text": "5pm to 6pm"},
+        {"value":18,"text": "6pm to 7pm"},
+        {"value":19,"text": "7pm to 8pm"},
+        {"value":20,"text": "8pm to 9pm"},
+        {"value":21,"text": "9pm to 10pm"},
+        {"value":22,"text": "10pm to 11pm"},
+        {"value":23,"text": "11pm to Midnight"}
+    ];
+
+    WEEKLY_FREQUENCY = [
+        {"value":"MONDAY", "text": "Every Monday"},
+        {"value":"TUESDAY", "text": "Every Tuesday"},
+        {"value":"WEDNESDAY", "text": "Every Wednesday"},
+        {"value":"THURSDAY", "text": "Every Thursday"},
+        {"value":"FRIDAY", "text": "Every Friday"},
+        {"value":"SATURDAY", "text": "Every Saturday"},
+        {"value":"SUNDAY", "text": "Every Sunday"}
+    ];
+  });
+
+  /**
+   * Function gets called when user selects the enable checkbox.
+   */
+  function onEnableScheduler() {
+    if(this.checked) {
+      $("#setScheduler").show();
+      google.script.host.setHeight(170);
+    } else {
+      $("#setScheduler").hide();
+      google.script.host.setHeight(120);
+    }
+  }
+
+  /**
+   * This gets called if the retrieveSchedule function executed successfully.
+   * @param {string} strReadableSchedule The schedule in human readable form.
+   */
+  function onSuccessHandler_retrieveSchedule(strReadableSchedule) {
+    if(strReadableSchedule == "") {
+      return;
+    }
+    $("#currentSchedule").show();
+    $("#currentSchedule").html(strReadableSchedule);
+  }
+
+  /**
+   * This gets triggered when the user makes a change in the selection options.
+   */
+  function onTimerSelectionChange() {
+    $('#timer')
+        .find('option')
+        .remove()
+        .end()
+        .append('<option value="--">Select Time</option>')
+        .val('--');
+
+    var timer = $('#frequency option:selected').val();
+
+    switch(timer) {
+      case "hourly":
+        $("#label-timer-for-weekly").hide();
+        $("#timer-for-weekly").hide();
+        for(var i = 0;i < HOURLY_FREQUENCY.length; i++) {
+          $('#timer').append(
+            '<option value="'
+               + HOURLY_FREQUENCY[i].value
+               + '">'
+               + HOURLY_FREQUENCY[i].text
+               + '</option>'
+          );
+        }
+        $("#for-timer").html(" once in ");
+        break;
+
+      case "daily":
+        $("#label-timer-for-weekly").hide();
+        $("#timer-for-weekly").hide();
+        for(var i = 0; i < DAILY_FREQUENCY.length; i++) {
+          $('#timer').append(
+            '<option value="'
+                + DAILY_FREQUENCY[i].value
+                + '">'
+                + DAILY_FREQUENCY[i].text
+                + '</option>'
+          );
+        }
+        $("#for-timer").html(" between ");
+        break;
+
+      case "weekly":
+        for(var i = 0; i < WEEKLY_FREQUENCY.length; i++) {
+          $('#timer').append(
+            '<option value="'
+                + WEEKLY_FREQUENCY[i].value
+                + '">'
+                + WEEKLY_FREQUENCY[i].text
+                + '</option>'
+          );
+        }
+        $('#timer-for-weekly').find('option').remove().end().append(
+          '<option value="--">Select time of day</option>'
+        ).val('--');
+
+        for(var i = 0;i < DAILY_FREQUENCY.length; i++) {
+          $('#timer-for-weekly').append(
+            '<option value="'
+                + DAILY_FREQUENCY[i].value
+                + '">'
+                + DAILY_FREQUENCY[i].text
+                + '</option>'
+          );
+        }
+
+        $("#label-timer-for-weekly").show();
+        $("#timer-for-weekly").show();
+        $("#for-timer").html(" on ");
+        break;
+     }
+  }
+
+  /**
+   * Function to trigger when user clicks the execute button.
+   */
+  function onExecuteClick() {
+    this.disabled = true;
+    var enableScheduler = $('#enableScheduler').is(':checked');
+    var timerType = $('#frequency option:selected').val();
+    var hour = "";
+    var weekDay = "";
+    if(timerType == "weekly") {
+      weekDay = $('#timer option:selected').val();
+      hour = $('#timer-for-weekly option:selected').val();
+    } else {
+      hour = $('#timer option:selected').val();
+    }
+
+    showStatus('Working...');
+
+    // Send the value to the server and handle the response.
+    google.script.run
+        .withSuccessHandler(onSuccessHandler_saveScheduler)
+        .withFailureHandler(onFailHandler_saveScheduler)
+        .withUserObject(this)
+        .setScheduler(enableScheduler,timerType,hour,weekDay);
+  }
+
+  /**
+   * Callback function which updates the content after scheduler is saved.
+   * @param {string} msg The error message.
+   * @param {Object} element User object (optional).
+   */
+  function onSuccessHandler_saveScheduler(msg, element) {
+     showStatus('Scheduler Saved Successfully.');
+     $("#currentSchedule").show();
+     $("#currentSchedule").html(msg);
+     element.disabled=false;
+  }
+
+  /**
+   * Callback function to handle errors when scheduler cannot be saved.
+   * @param {string} msg The error message.
+   * @param {Object} element User object (optional).
+   */
+  function onFailHandler_saveScheduler(msg, element) {
+     showStatus('Execution failed: ' + msg, 'error');
+  }
+
+  /**
+   * Shows a status message.
+   * @param {string} msg The status message to display.
+   * @param {string} classId The class to apply to the status message box.
+   */
+  function showStatus(msg, classId) {
+    $('#dialog-status').removeClass().html(msg);
+    if (classId) {
+      $('#dialog-status').removeClass();
+      $('#dialog-status').addClass(classId);
+    }
+  }
+</script>

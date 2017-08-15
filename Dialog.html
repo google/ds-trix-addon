@@ -1,0 +1,42 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- Use a templated HTML printing scriptlet to import common stylesheet. -->
+<?!= HtmlService.createHtmlOutputFromFile('Stylesheet').getContent(); ?>
+
+<!-- Below is the HTML code that defines the dialog element structure. -->
+<div>
+  <div class="form-group" id="dialog-elements">
+    <label for="dialog-webquery-textbox">
+      Please enter the DS Web Query URL
+    </label>
+    <?
+    var documentProperties = PropertiesService.getDocumentProperties();
+    var currentSheetId = SpreadsheetApp.getActiveSheet().getSheetId();
+    var webQueryUrl = documentProperties.getProperty(currentSheetId+"_WEBQUERY_URL");
+    if(webQueryUrl == null)
+      webQueryUrl = "";
+    ?>
+    <input type="text" id="dialog-webquery-textbox" value="<?=webQueryUrl?>"/>
+  </div>
+  <div class="block" id="dialog-button-bar">
+    <button class="action" id="dialog-execute-button">Submit</button>
+    <button id="dialog-cancel-button" onclick="google.script.host.close()">Close</button>
+  </div>
+  <div id="dialog-status"></div>
+</div>
+
+<!-- Use a templated HTML printing scriptlet to import JavaScript. -->
+<?!= HtmlService.createHtmlOutputFromFile('DialogJavascript').getContent(); ?>
