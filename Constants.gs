@@ -39,7 +39,7 @@ var CLIENT_SECRET = 'insert_client_secret';
  *
  * @const {string}
  */
-var REDIRECT_URI = 'insert_redirect_uri';
+var REDIRECT_URI = 'https://script.google.com/macros/d/insert_script_id/usercallback'
 
 /**
  * The title of the main dialog.
