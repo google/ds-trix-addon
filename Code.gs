@@ -51,9 +51,14 @@ function onOpen(e) {
  * Convenience function to clear all properties set. Used only in debug mode.
  */
 function purgeProperties() {
-  PropertiesService.getScriptProperties().deleteAllProperties();
   PropertiesService.getDocumentProperties().deleteAllProperties();
   PropertiesService.getUserProperties().deleteAllProperties();
+
+  // Also delete any triggers currently set by this user.
+  var triggers = ScriptApp.getUserTriggers(SpreadsheetApp.getActiveSpreadsheet());
+  for (var i=0; i<triggers.length; i++) {
+    ScriptApp.deleteTrigger(triggers[i]);
+  }
 }
 
 /**
@@ -453,7 +458,7 @@ function getDSOAuthService() {
       .setCallbackFunction('authCallback')
 
       // Set the property store where authorized tokens should be persisted.
-      .setPropertyStore(PropertiesService.getScriptProperties())
+      .setPropertyStore(PropertiesService.getUserProperties())
 
       // Set the scopes to request (space-separated for Google services).
       .setScope(SCOPE)
