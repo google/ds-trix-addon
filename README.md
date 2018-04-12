@@ -100,3 +100,13 @@ on your reports.
     isn't verified`. If you see this, click on `Advanced` and select `Go to
     <name of script>`. In the pop up, type in `Continue` and press `Next` to
     proceed.
+
+    ### Update (12-Apr-2018):
+
+    Recent changes with the way scopes are handled by apps script are causing
+    the addon to fail for new users. To overcome this, the scopes need to be
+    explicitly specified in the manifest file (appsscript.json). This file has
+    been added to the repo. It needs to be added to the addon by opening the
+    script editor and going to `View > Show manifest file` and copy pasting the
+    contents there`. Once updated, refresh the spreadsheet and try to
+    re-authenticate. If necessary, purge the properties by using the addon menu.
